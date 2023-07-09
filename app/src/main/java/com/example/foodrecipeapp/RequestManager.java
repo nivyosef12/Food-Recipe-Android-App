@@ -18,20 +18,46 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+/**
+ * The RequestManager class handles network requests using the Retrofit library.
+ * It provides methods for fetching random recipes and recipe details.
+ */
 public class RequestManager {
     Context context;
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl("https://api.spoonacular.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
+    Retrofit retrofit;
 
+    /**
+     * Constructs a RequestManager with the given context.
+     *
+     * @param context The application context.
+     */
     public RequestManager(Context context) {
         this.context = context;
+
+        // initialize Retrofit with base URL and Gson converter factory
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.spoonacular.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
     }
 
+    /**
+     * Fetches random recipes based on the provided tags.
+     *
+     * @param listener The listener for random recipe response.
+     * @param tags     The list of tags for filtering recipes.
+     */
     public void getRandomRecipes(RandomRecipeResponseListener listener, List<String> tags){
+        // create an instance of the CallRandomRecipes interface using Retrofit
         CallRandomRecipes callRandomRecipes = retrofit.create(CallRandomRecipes.class);
-        Call<RandomRecipeApiResponse> call = callRandomRecipes.callRandomRecipe(context.getString(R.string.api_key), "10", tags);
+
+        // make an asynchronous network call to fetch random recipes
+        Call<RandomRecipeApiResponse> call = callRandomRecipes.callRandomRecipe(
+                context.getString(R.string.api_key),
+                "10",
+                tags);
+
+        // process the response in onResponse and onFailure callbacks
         call.enqueue(new Callback<RandomRecipeApiResponse>() {
             @Override
             public void onResponse(Call<RandomRecipeApiResponse> call, Response<RandomRecipeApiResponse> response) {
@@ -50,9 +76,22 @@ public class RequestManager {
         });
     }
 
+    /**
+     * Fetches recipe details for the given recipe ID.
+     *
+     * @param listener The listener for recipe details response.
+     * @param id       The ID of the recipe to fetch details for.
+     */
     public void getRecipeDetails(RecipeDetailsListener listener, int id){
+        // create an instance of the CallRecipeDetails interface using Retrofit
         CallRecipeDetails callRecipeDetails = retrofit.create(CallRecipeDetails.class);
-        Call<RecipeDetails> call = callRecipeDetails.callRecipeDetails(id, context.getString(R.string.api_key));
+
+        // make an asynchronous network call to fetch recipe details
+        Call<RecipeDetails> call = callRecipeDetails.callRecipeDetails(
+                id,
+                context.getString(R.string.api_key));
+
+        // process the response in onResponse and onFailure callbacks
         call.enqueue(new Callback<RecipeDetails>() {
             @Override
             public void onResponse(Call<RecipeDetails> call, Response<RecipeDetails> response) {
@@ -70,6 +109,9 @@ public class RequestManager {
         });
     }
 
+    /**
+     * Interface for the random recipes API endpoint.
+     */
     private interface CallRandomRecipes{
         @GET("recipes/random")
         Call<RandomRecipeApiResponse> callRandomRecipe(
@@ -79,6 +121,9 @@ public class RequestManager {
         );
     }
 
+    /**
+     * Interface for the recipe details API endpoint.
+     */
     private interface CallRecipeDetails{
         @GET("recipes/{id}/information")
         Call<RecipeDetails> callRecipeDetails(
